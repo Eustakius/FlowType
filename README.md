@@ -74,7 +74,13 @@
 
 ## 📸 Screenshots
 
-![FlowType Demo](public/screenshots/demo.png)
+## 📸 Screenshots
+
+| **Zen Mode & Comfy Theme** | **Cyber Theme** |
+|:---:|:---:|
+| ![Home](public/screenshots/feature_home_comfy.png) | ![Cyber](public/screenshots/feature_theme_cyber.png) |
+| **Active Typing (Zen)** | **Result Card** |
+| ![Zen](public/screenshots/feature_zen_mode.png) | ![Result](public/screenshots/feature_result_card.png) |
 
 ## 🤝 Contributing
 
