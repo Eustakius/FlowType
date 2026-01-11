@@ -74,7 +74,7 @@
 
 ## 📸 Screenshots
 
-*(To be added)*
+![FlowType Demo](public/screenshots/demo.png)
 
 ## 🤝 Contributing
 
