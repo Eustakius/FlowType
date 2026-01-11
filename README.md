@@ -74,8 +74,6 @@
 
 ## 📸 Screenshots
 
-## 📸 Screenshots
-
 | **Zen Mode & Comfy Theme** | **Cyber Theme** |
 |:---:|:---:|
 | ![Home](public/screenshots/feature_home_comfy.png) | ![Cyber](public/screenshots/feature_theme_cyber.png) |
