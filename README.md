@@ -9,8 +9,10 @@
 
 ## ✨ Features
 
+- **💾 Persistent Settings**: Your preferences (theme, font, difficulty) are automatically saved to your browser unless you clear your cache.
+- **⚙️ Settings Hub**: A centralized modal to configure behavior, appearance, and sound.
 - **👻 Ghost Racer**: Race against your own previous best! A ghost cursor replays your last run's speed real-time.
-- **🧘 Zen Mode**: UI elements fade away while typing for zero distractions.
+- **🧘 Zen Mode**: UI elements fade away while typing for zero distractions. Automatically engages when you start typing.
 - **🎨 Dynamic Themes**: 
   - **Comfy**: Warm, Gruvbox-inspired tones for late-night sessions.
   - **Cyber**: High-contrast neon aesthetics for high-performance vibes.

@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import clsx from 'clsx';
 import { useSound } from '../hooks/useSound';
+import { useSettings } from '../contexts/SettingsContext';
 import ConfigBar from './ConfigBar';
+import SettingsModal from './SettingsModal';
 
 // Simple Typewriter Component
 const Typewriter = ({ text, speed = 100, wait = 2000 }) => {
@@ -98,27 +100,23 @@ const Typewriter = ({ text, speed = 100, wait = 2000 }) => {
     );
 };
 
-// Game.jsx
-
 export default function Game() {
-    const { playThock } = useSound();
+    // Global Settings
+    const { settings, updateSettings } = useSettings();
+    const { theme, soundEnabled, mode, duration, wordCount, zenMode: settingZenMode } = settings;
 
-    // UI State
-    const [theme, setTheme] = useState('default');
-    const [soundEnabled, setSoundEnabled] = useState(true);
+    // Use Sound Hook (pass enabled stat)
+    const { playThock } = useSound(soundEnabled);
+
+    // Local UI State
     const [isFocused, setIsFocused] = useState(true);
     const [capsLock, setCapsLock] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     // Ghost & QoL State
     const [lastStats, setLastStats] = useState(null); // { wpm: 0 }
     const [ghostIndex, setGhostIndex] = useState(0);
     const [shake, setShake] = useState(0);
-
-    const [config, setConfig] = useState({
-        mode: 'time',
-        duration: 30,
-        wordCount: 25
-    });
 
     const {
         input,
@@ -128,17 +126,17 @@ export default function Game() {
         isFinished,
         stats,
         handleKeyDown,
-        reset: engineReset,
-        config: engineConfig
+        reset: engineReset
     } = useTypingEngine({
-        duration: config.duration,
-        mode: config.mode,
-        initialWordCount: config.wordCount
+        duration: duration,
+        mode: mode,
+        initialWordCount: wordCount
     });
 
-    const zenMode = isRunning && !isFinished;
-
-    // Custom Reset to handle Ghost
+    // Derived Zen Mode (Active if running, OR if setting forces it, but usually standard zen is running-only)
+    // The settingZenMode might be "Always On" vs "Auto". For now, let's keep standard behavior:
+    // If settingZenMode is true, it might mean "Enable Zen Mode Features".
+    const activeZen = isRunning && !isFinished;
     const reset = () => {
         setGhostIndex(0);
         engineReset();
@@ -228,8 +226,8 @@ export default function Game() {
     const submitResults = async () => {
         try {
             await axios.post('/api/tests', {
-                mode: config.mode,
-                duration: config.duration,
+                mode: mode,
+                duration: duration,
                 wpm: stats.wpm,
                 raw_wpm: stats.rawWpm,
                 accuracy: stats.accuracy,
@@ -249,6 +247,11 @@ export default function Game() {
             data-theme={theme}
             style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-main)' }}
         >
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+            />
+
             {/* Focus Overlay */}
             <AnimatePresence>
                 {!isFocused && !isFinished && (
@@ -284,7 +287,7 @@ export default function Game() {
             <motion.div
                 className="w-full max-w-4xl flex flex-col items-center"
                 animate={{
-                    opacity: zenMode ? 0.3 : 1,
+                    opacity: activeZen ? 0.3 : 1,
                     x: shake % 2 === 0 ? 0 : [-5, 5, -5, 5, 0] // Simple shake animation keyframes
                 }}
                 transition={{
@@ -294,12 +297,16 @@ export default function Game() {
                 key={shake} // Force re-render animation on shake change
             >
                 <ConfigBar
-                    config={config}
-                    setConfig={setConfig}
-                    theme={theme}
-                    setTheme={setTheme}
+                    config={{ mode, duration, wordCount }}
+                    setConfig={(newConfig) => {
+                        // Adapter to map ConfigBar's object updates to Context keys
+                        if (newConfig.mode) updateSettings('mode', newConfig.mode);
+                        if (newConfig.duration) updateSettings('duration', newConfig.duration);
+                        if (newConfig.wordCount) updateSettings('wordCount', newConfig.wordCount);
+                    }}
                     soundEnabled={soundEnabled}
-                    setSoundEnabled={setSoundEnabled}
+                    setSoundEnabled={(s) => updateSettings('soundEnabled', s)}
+                    onSettingsClick={() => setIsSettingsOpen(true)}
                 />
 
                 {/* Header / Stats */}
@@ -311,9 +318,9 @@ export default function Game() {
                     <div className="flex gap-8 text-2xl">
                         <div className="flex flex-col items-end">
                             <span className="text-xs uppercase tracking-widest text-sub">
-                                {config.mode === 'time' ? 'time' : 'words'}
+                                {mode === 'time' ? 'time' : 'words'}
                             </span>
-                            <span className="text-primary">{config.mode === 'time' ? timeLeft : `${input.split(' ').length}/${config.wordCount}`}</span>
+                            <span className="text-primary">{mode === 'time' ? timeLeft : `${input.split(' ').length}/${wordCount}`}</span>
                         </div>
                         {/* Show Ghost WPM if available */}
                         {lastStats && (
@@ -380,10 +387,10 @@ export default function Game() {
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <div className="text-sub text-xs font-bold uppercase tracking-widest">
-                                            {config.mode === 'time' ? 'time' : 'words'}
+                                            {mode === 'time' ? 'time' : 'words'}
                                         </div>
                                         <div className="text-5xl font-mono text-sub font-bold leading-none mt-2">
-                                            {config.mode === 'time' ? config.duration : config.wordCount}
+                                            {mode === 'time' ? duration : wordCount}
                                         </div>
                                     </div>
                                 </div>
@@ -453,7 +460,7 @@ export default function Game() {
             {/* Footer */}
             <motion.div
                 className="mt-16 text-sub text-sm flex gap-6"
-                animate={{ opacity: zenMode ? 0 : 1 }}
+                animate={{ opacity: activeZen ? 0 : 1 }}
                 transition={{ duration: 0.5 }}
             >
                 <div className="flex items-center gap-2">
